@@ -1,18 +1,17 @@
-// be careful use vpn youtube may flag your IP in the future we will add some security patcher !
 (function () {
   'use strict';
   if (window.__YouSource) { window.__YouSource.open(); return; }
 
-  ['ys-fab','ys-panel','ys-sug','ys-toasts','ys-watermark','yousource-style','ys-loader','yousource-tools-style','ys-ctx-menu'].forEach(id => {
+  ['ys-fab','ys-panel','ys-sug','ys-toasts','ys-watermark','yousource-style','ys-loader','yousource-tools-style','ys-ctx-menu','ys-top-banner'].forEach(id => {
     const el = document.getElementById(id); if (el) el.remove();
   });
   if (window.__ysObs) { try { window.__ysObs.disconnect(); } catch(e){} }
-  if (window.__ysPingTimer) clearInterval(window.__ysPingTimer);
   if (window.__ysDotsInterval) clearInterval(window.__ysDotsInterval);
+  if (window.__ysPingTimer) clearInterval(window.__ysPingTimer);
 
   const SYMBOL_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M21.58 7.19c-.23-1.25-1.25-2.23-2.49-2.46C16.89 4.25 12 4.25 12 4.25s-4.89 0-7.09.48C3.67 4.96 2.65 5.94 2.42 7.19 2 9.42 2 12 2 12s0 2.58.42 4.81c.23 1.25 1.25 2.23 2.49 2.46 2.2.48 7.09.48 7.09.48s4.89 0 7.09-.48c1.24-.23 2.26-1.21 2.49-2.46.42-2.23.42-4.81.42-4.81s0-2.58-.42-4.81zM9.99 15.41V8.59l5.73 3.41-5.73 3.41z'/%3E%3C/svg%3E";
   let ANIME_LOGO = SYMBOL_LOGO;
-  let CURRENT_VERSION = '6.3.0';
+  let CURRENT_VERSION = '6.4.0';
 
   async function fetchAnimeLogo() {
     const apis = [
@@ -198,15 +197,17 @@
     region: '', strictRegion: false,
     suggest: true, minimal: true,
     serverBindEnabled: false, bridgeUrl: '',
-    autoUpdate: true
+    autoUpdate: true, betaUI: false
   };
   TOOLS.forEach(t => DEF[t.id] = false);
 
   let S;
-  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.3') || '{}')); }
+  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.4') || '{}')); }
   catch (e) { S = Object.assign({}, DEF); }
+  
+  if (!S.removedVideos) S.removedVideos = [];
 
-  const save = () => { try { localStorage.setItem('ys.v6.3', JSON.stringify(S)); } catch(e){} };
+  const save = () => { try { localStorage.setItem('ys.v6.4', JSON.stringify(S)); } catch(e){} };
 
   const BASE_CSS = `
   #ys-loader{position:fixed!important;inset:0!important;z-index:2147483647!important;background:#0a0a0c!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;transition:opacity .6s ease, visibility .6s!important}
@@ -324,13 +325,55 @@
 
   #ys-ctx-menu{position:fixed!important;z-index:2147483647!important;background:rgba(20,21,23,0.95)!important;
     border:1px solid rgba(255,255,255,0.1)!important;border-radius:10px!important;padding:6px!important;
-    box-shadow:0 10px 30px rgba(0,0,0,0.7)!important;backdrop-filter:blur(16px)!important;display:none;flex-direction:column!important;min-width:180px!important}
+    box-shadow:0 10px 30px rgba(0,0,0,0.7)!important;backdrop-filter:blur(16px)!important;display:none;flex-direction:column!important;min-width:200px!important}
   .ys-ctx-item{color:#e8e8e8!important;padding:8px 12px!important;font:13px ui-sans-serif,system-ui!important;
     cursor:pointer!important;border-radius:6px!important;transition:background .15s!important;display:flex!important;align-items:center!important;gap:8px!important}
   .ys-ctx-item:hover{background:rgba(255,255,255,0.1)!important}
 
-  .ys-3dots { position: absolute !important; top: 8px !important; right: 8px !important; z-index: 1000 !important; background: rgba(0,0,0,0.7) !important; color: white !important; border-radius: 4px !important; padding: 4px 8px !important; cursor: pointer !important; opacity: 0 !important; transition: opacity 0.2s !important; font-size: 18px !important; line-height: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; user-select: none !important; }
-  ytd-rich-item-renderer:hover .ys-3dots, ytd-video-renderer:hover .ys-3dots, ytd-compact-video-renderer:hover .ys-3dots { opacity: 1 !important; }
+  .ys-3dots { position: absolute !important; top: 8px !important; right: 8px !important; z-index: 1000 !important; background: rgba(0,0,0,0.7) !important; color: white !important; border-radius: 6px !important; padding: 2px 6px !important; cursor: pointer !important; opacity: 0 !important; transition: opacity 0.2s !important; font-size: 18px !important; line-height: 1.2 !important; display: flex !important; align-items: center !important; justify-content: center !important; user-select: none !important; font-weight: bold; pointer-events: auto !important; }
+  ytd-rich-item-renderer:hover .ys-3dots, ytd-video-renderer:hover .ys-3dots, ytd-compact-video-renderer:hover .ys-3dots, ytd-reel-item-renderer:hover .ys-3dots { opacity: 1 !important; }
+
+  #ys-top-banner { position: fixed !important; top: 16px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 2147483647 !important; background: rgba(20,21,23,0.95) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 12px !important; padding: 8px 16px !important; color: white !important; font: 13px ui-sans-serif,system-ui !important; display: none !important; align-items: center !important; gap: 10px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.6) !important; backdrop-filter: blur(16px) !important; }
+  #ys-top-banner.ys-show { display: flex !important; }
+
+  html.ys-beta-ui {
+    --yt-spec-base-background: #0f0f0f !important;
+    --yt-spec-raised-background: #1a1a1a !important;
+    --yt-spec-menu-background: #1a1a1a !important;
+  }
+  html.ys-beta-ui #masthead-container {
+    background: rgba(15, 15, 15, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+  }
+  html.ys-beta-ui #search-form {
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 24px !important;
+    background: rgba(255,255,255,0.05) !important;
+    overflow: hidden !important;
+  }
+  html.ys-beta-ui #search-form input {
+    background: transparent !important;
+    color: #fff !important;
+  }
+  html.ys-beta-ui #search-icon-legacy {
+    background: transparent !important;
+    border-left: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 0 !important;
+  }
+  html.ys-beta-ui ytd-subscribe-button-renderer .yt-spec-button-shape-next {
+    background: linear-gradient(135deg, #4b7a63, #2c4a3a) !important;
+    border-radius: 20px !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+    border: none !important;
+  }
+  html.ys-beta-ui ytd-subscribe-button-renderer .yt-spec-button-shape-next:active {
+    transform: scale(0.95) !important;
+    box-shadow: 0 0 15px rgba(75, 122, 99, 0.6) !important;
+  }
+  html.ys-beta-ui ytd-thumbnail img {
+    border-radius: 12px !important;
+  }
   `;
 
   try {
@@ -509,7 +552,7 @@
   const brand = document.createElement('div'); brand.className = 'ys-brand';
   const brandImg = document.createElement('img'); brandImg.src = ANIME_LOGO; brandImg.setAttribute('data-logo', '1');
   brand.appendChild(brandImg); brand.appendChild(document.createTextNode('YouSource'));
-  const ver = document.createElement('span'); ver.textContent = 'v6.3'; brand.appendChild(ver);
+  const ver = document.createElement('span'); ver.textContent = 'v6.4'; brand.appendChild(ver);
   const closeBtn = document.createElement('button'); closeBtn.type = 'button'; closeBtn.className = 'ys-x'; closeBtn.setAttribute('data-act', 'close'); closeBtn.textContent = '✕';
   header.appendChild(brand); header.appendChild(closeBtn); panel.appendChild(header);
 
@@ -526,6 +569,7 @@
   
   const tabCore = document.createElement('div'); tabCore.className = 'ys-content active'; tabCore.setAttribute('data-content', 'core');
   tabCore.appendChild(row('Enabled', makeSwitch('on')));
+  tabCore.appendChild(row('YouSource UI (Beta)', makeSwitch('betaUI')));
   tabCore.appendChild(sep());
   
   tabCore.appendChild(row('Logo Style', makeSelect('logoType', [
@@ -539,6 +583,26 @@
   tabCore.appendChild(row('Strict region (hide unknown)', makeSwitch('strictRegion')));
   const regionHint = document.createElement('div'); regionHint.className = 'ys-hint'; regionHint.textContent = 'Spoofs language by scanning title and metadata. Unknown languages are kept unless Strict is on.';
   tabCore.appendChild(regionHint);
+  
+  tabCore.appendChild(sep());
+  const restoreBtn = document.createElement('button'); restoreBtn.className = 'ys-btn'; restoreBtn.textContent = 'Restore Removed Videos'; restoreBtn.style.marginTop = '10px';
+  restoreBtn.addEventListener('click', () => {
+    if (!S.removedVideos || S.removedVideos.length === 0) { toast('No removed videos to restore.', 'info', 2000); return; }
+    S.removedVideos.forEach(vidUrl => {
+      const cards = document.querySelectorAll('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer');
+      cards.forEach(card => {
+        const link = card.querySelector('a#thumbnail') || card.querySelector('a#video-title-link') || card.querySelector('a');
+        if (link && link.href.includes(vidUrl)) {
+          card.style.display = '';
+        }
+      });
+    });
+    S.removedVideos = [];
+    save();
+    toast('All removed videos restored!', 'success', 2000);
+  });
+  tabCore.appendChild(restoreBtn);
+  
   tabContents.appendChild(tabCore);
 
   const tabTools = document.createElement('div'); tabTools.className = 'ys-content'; tabTools.setAttribute('data-content', 'tools');
@@ -617,7 +681,7 @@
   tutorial.appendChild(document.createTextNode('1. Download the Python script.'));
   tutorial.appendChild(document.createElement('br'));
   tutorial.appendChild(document.createTextNode('2. Run '));
-  const c1 = document.createElement('code'); c1.textContent = 'pip install flask flask_cors requests'; tutorial.appendChild(c1);
+  const c1 = document.createElement('code'); c1.textContent = 'pip install flask flask_cors requests yt_dlp'; tutorial.appendChild(c1);
   tutorial.appendChild(document.createTextNode('.'));
   tutorial.appendChild(document.createElement('br'));
   tutorial.appendChild(document.createTextNode('3. Run '));
@@ -683,6 +747,9 @@
     if (k === 'serverBindEnabled') {
       startPing();
     }
+    if (k === 'betaUI') {
+      if (S.betaUI) initTopBanner();
+    }
   });
 
   connectBtn.addEventListener('click', async () => {
@@ -713,7 +780,68 @@
   checkUpdateBtn.addEventListener('click', checkForUpdates);
 
   pyBtn.addEventListener('click', () => {
-    const code = `from flask import Flask, request, jsonify, Response\nfrom flask_cors import CORS\nimport requests\n\napp = Flask(__name__)\nCORS(app)\n\n@app.route('/ping')\ndef ping():\n    return jsonify({"status": "ok"})\n\n@app.route('/suggest')\ndef suggest():\n    q = request.args.get('q', '')\n    r = requests.get(f'https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q={q}')\n    return jsonify(r.json())\n\n@app.route('/proxy')\ndef proxy():\n    url = request.args.get('url')\n    if not url: return jsonify({"error": "no url"}), 400\n    try:\n        r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})\n        return Response(r.content, status=r.status_code, content_type=r.headers.get('Content-Type'))\n    except Exception as e:\n        return jsonify({"error": str(e)}), 500\n\n@app.route('/download')\ndef download():\n    url = request.args.get('url')\n    quality = request.args.get('quality')\n    if not url: return jsonify({"error": "no url"}), 400\n    return jsonify({"status": "success", "message": f"Downloading {url} at {quality}..."})\n\nif __name__ == '__main__':\n    app.run(port=5000)`;
+    const code = `from flask import Flask, request, jsonify, Response
+from flask_cors import CORS
+import os
+import requests
+import yt_dlp
+
+app = Flask(__name__)
+CORS(app)
+
+@app.route('/ping')
+def ping():
+    return jsonify({"status": "ok"})
+
+@app.route('/suggest')
+def suggest():
+    q = request.args.get('q', '')
+    try:
+        r = requests.get(f'https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q={q}')
+        return jsonify(r.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/proxy')
+def proxy():
+    url = request.args.get('url')
+    if not url: return jsonify({"error": "no url"}), 400
+    try:
+        r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
+        return Response(r.content, status=r.status_code, content_type=r.headers.get('Content-Type'))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/download')
+def download():
+    url = request.args.get('url')
+    quality = request.args.get('quality', '1080p')
+    if not url: return jsonify({"error": "no url"}), 400
+    
+    home_dir = os.path.expanduser("~")
+    dl_dir = os.path.join(home_dir, "youSearch")
+    os.makedirs(dl_dir, exist_ok=True)
+    
+    fmt = 'bestvideo+bestaudio/best'
+    if 'Audio' in quality: fmt = 'bestaudio/best'
+    elif '720' in quality: fmt = 'bestvideo[height<=720]+bestaudio/best'
+    elif '480' in quality: fmt = 'bestvideo[height<=480]+bestaudio/best'
+    elif '360' in quality: fmt = 'bestvideo[height<=360]+bestaudio/best'
+    
+    ydl_opts = {
+        'outtmpl': os.path.join(dl_dir, '%(title)s.%(ext)s'),
+        'format': fmt
+    }
+    
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        return jsonify({"status": "success", "path": dl_dir})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(port=5000)`;
     const blob = new Blob([code], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'bridge.py'; a.click();
@@ -762,6 +890,8 @@
 
   function apply() {
     document.documentElement.classList.toggle('ys-on', !!S.on);
+    document.documentElement.classList.toggle('ys-beta-ui', !!S.betaUI);
+    
     if (!S.on) {
       document.querySelectorAll('[data-ys-hidden]').forEach(el => { el.style.display = ''; delete el.dataset.ysHidden; });
       document.documentElement.className = document.documentElement.className.replace(/\bys-[a-z-]+\b/g, '');
@@ -848,9 +978,7 @@
   let currentVideoUrl = '';
   let currentCard = null;
 
-  function hideCtxMenu() {
-    ctxMenu.style.display = 'none';
-  }
+  function hideCtxMenu() { ctxMenu.style.display = 'none'; }
 
   function showQualityMenu() {
     while (ctxMenu.firstChild) ctxMenu.removeChild(ctxMenu.firstChild);
@@ -871,16 +999,17 @@
 
   async function startDownload(url, quality) {
     if (S.serverBindEnabled && S.bridgeUrl && pingStatus === 'connected') {
-      toast(`Starting download (${quality})...`, 'info', 3000);
+      toast(`Starting download on server (${quality})...`, 'info', 3000);
       try {
         const res = await fetch(S.bridgeUrl.replace(/\/$/, '') + '/download?url=' + encodeURIComponent(url) + '&quality=' + encodeURIComponent(quality));
-        if (res.ok) toast('Download initiated on server!', 'success', 4000);
+        if (res.ok) toast('Download initiated! Check ~/youSearch', 'success', 4000);
         else toast('Server rejected download.', 'error', 3000);
       } catch (e) {
         toast('Download request failed.', 'error', 3000);
       }
     } else {
-      toast('ServerBind required for downloading. Connect it in settings.', 'warn', 5000);
+      toast('Opening downloader service...', 'info', 3000);
+      window.open('https://cobalt.tools/?u=' + encodeURIComponent(url), '_blank');
     }
   }
 
@@ -896,25 +1025,50 @@
     const dlBtn = document.createElement('div');
     dlBtn.className = 'ys-ctx-item';
     dlBtn.textContent = 'Download video';
-    dlBtn.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      showQualityMenu();
-    });
+    dlBtn.addEventListener('click', (ev) => { ev.stopPropagation(); showQualityMenu(); });
 
     const rmBtn = document.createElement('div');
     rmBtn.className = 'ys-ctx-item';
     rmBtn.textContent = 'Remove from list';
     rmBtn.addEventListener('click', (ev) => {
       ev.stopPropagation();
-      if (currentCard) currentCard.style.display = 'none';
+      if (currentCard) {
+        currentCard.style.display = 'none';
+        if (!S.removedVideos.includes(currentVideoUrl)) {
+          S.removedVideos.push(currentVideoUrl);
+          save();
+        }
+      }
+      hideCtxMenu();
+      toast('Video removed from list.', 'info', 2000);
+    });
+
+    const copyBtn = document.createElement('div');
+    copyBtn.className = 'ys-ctx-item';
+    copyBtn.textContent = 'Copy Link';
+    copyBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      navigator.clipboard.writeText(currentVideoUrl);
+      hideCtxMenu();
+      toast('Link copied to clipboard!', 'success', 2000);
+    });
+
+    const newTabBtn = document.createElement('div');
+    newTabBtn.className = 'ys-ctx-item';
+    newTabBtn.textContent = 'Open in new tab';
+    newTabBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      window.open(currentVideoUrl, '_blank');
       hideCtxMenu();
     });
 
     ctxMenu.appendChild(dlBtn);
     ctxMenu.appendChild(rmBtn);
+    ctxMenu.appendChild(copyBtn);
+    ctxMenu.appendChild(newTabBtn);
 
-    ctxMenu.style.left = Math.min(x, window.innerWidth - 200) + 'px';
-    ctxMenu.style.top = Math.min(y, window.innerHeight - 100) + 'px';
+    ctxMenu.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+    ctxMenu.style.top = Math.min(y, window.innerHeight - 200) + 'px';
     ctxMenu.style.display = 'flex';
   }
 
@@ -929,9 +1083,9 @@
   });
 
   function injectThreeDots() {
-    document.querySelectorAll('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer').forEach(card => {
+    document.querySelectorAll('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer').forEach(card => {
       if (card.querySelector('.ys-3dots')) return;
-      const thumb = card.querySelector('ytd-thumbnail') || card;
+      const thumb = card.querySelector('ytd-thumbnail');
       if (!thumb) return;
       const btn = document.createElement('div');
       btn.className = 'ys-3dots';
@@ -953,6 +1107,18 @@
     if (!e.target.closest('#ys-ctx-menu')) hideCtxMenu();
   });
 
+  function initTopBanner() {
+    let banner = document.getElementById('ys-top-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'ys-top-banner';
+      document.body.appendChild(banner);
+    }
+    banner.innerHTML = '<i class="ri-notification-3-line" style="color:#4b7a63"></i> <span>Welcome to YouSource UI Beta! Enjoy the glassy look.</span>';
+    banner.classList.add('ys-show');
+    setTimeout(() => banner.classList.remove('ys-show'), 5000);
+  }
+
   window.addEventListener('yt-navigate-finish', () => { hideSug(); hideCtxMenu(); setTimeout(() => { apply(); injectThreeDots(); }, 150); });
 
   syncPanel(); apply(); renderTools(); injectThreeDots();
@@ -970,7 +1136,8 @@
   setTimeout(() => {
     loader.classList.add('ys-hide');
     setTimeout(() => { if (loader.parentNode) loader.remove(); }, 600);
-    toast('YouSource v6.3 Ready. 250+ tools loaded.', 'success', 3000);
+    toast('YouSource v6.4 Ready. 250+ tools loaded.', 'success', 3000);
+    if (S.betaUI) initTopBanner();
   }, 1500);
 
   if (S.serverBindEnabled) startPing();

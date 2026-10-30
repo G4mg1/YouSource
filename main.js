@@ -6,12 +6,12 @@
     const el = document.getElementById(id); if (el) el.remove();
   });
   if (window.__ysObs) { try { window.__ysObs.disconnect(); } catch(e){} }
-  if (window.__ysDotsInterval) clearInterval(window.__ysDotsInterval);
+  if (window.__ysDotsObs) { try { window.__ysDotsObs.disconnect(); } catch(e){} }
   if (window.__ysPingTimer) clearInterval(window.__ysPingTimer);
 
   const SYMBOL_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M21.58 7.19c-.23-1.25-1.25-2.23-2.49-2.46C16.89 4.25 12 4.25 12 4.25s-4.89 0-7.09.48C3.67 4.96 2.65 5.94 2.42 7.19 2 9.42 2 12 2 12s0 2.58.42 4.81c.23 1.25 1.25 2.23 2.49 2.46 2.2.48 7.09.48 7.09.48s4.89 0 7.09-.48c1.24-.23 2.26-1.21 2.49-2.46.42-2.23.42-4.81.42-4.81s0-2.58-.42-4.81zM9.99 15.41V8.59l5.73 3.41-5.73 3.41z'/%3E%3C/svg%3E";
   let ANIME_LOGO = SYMBOL_LOGO;
-  let CURRENT_VERSION = '6.4.0';
+  let CURRENT_VERSION = '6.6.1';
 
   async function fetchAnimeLogo() {
     const apis = [
@@ -202,12 +202,12 @@
   TOOLS.forEach(t => DEF[t.id] = false);
 
   let S;
-  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.4') || '{}')); }
+  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.6.1') || '{}')); }
   catch (e) { S = Object.assign({}, DEF); }
   
   if (!S.removedVideos) S.removedVideos = [];
 
-  const save = () => { try { localStorage.setItem('ys.v6.4', JSON.stringify(S)); } catch(e){} };
+  const save = () => { try { localStorage.setItem('ys.v6.6.1', JSON.stringify(S)); } catch(e){} };
 
   const BASE_CSS = `
   #ys-loader{position:fixed!important;inset:0!important;z-index:2147483647!important;background:#0a0a0c!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;transition:opacity .6s ease, visibility .6s!important}
@@ -530,9 +530,10 @@
           } catch (e) { console.warn("Blob import failed", e); }
         }
         if (!evaluated) {
-          try { eval(scriptText); evaluated = true; } catch(e) { alert('CSP blocked update. Please reload manually.'); }
+          toast('CSP blocked update. Please reload manually.', 'error', 5000);
+        } else {
+          toast('Updated to v' + remoteVersion + '. Reload to apply.', 'success', 5000);
         }
-        toast('Updated to v' + remoteVersion + '. Reload to apply.', 'success', 5000);
       } else {
         toast('YouSource is up to date (v' + CURRENT_VERSION + ')', 'success', 3000);
       }
@@ -552,7 +553,7 @@
   const brand = document.createElement('div'); brand.className = 'ys-brand';
   const brandImg = document.createElement('img'); brandImg.src = ANIME_LOGO; brandImg.setAttribute('data-logo', '1');
   brand.appendChild(brandImg); brand.appendChild(document.createTextNode('YouSource'));
-  const ver = document.createElement('span'); ver.textContent = 'v6.4'; brand.appendChild(ver);
+  const ver = document.createElement('span'); ver.textContent = 'v6.6.1'; brand.appendChild(ver);
   const closeBtn = document.createElement('button'); closeBtn.type = 'button'; closeBtn.className = 'ys-x'; closeBtn.setAttribute('data-act', 'close'); closeBtn.textContent = '✕';
   header.appendChild(brand); header.appendChild(closeBtn); panel.appendChild(header);
 
@@ -748,6 +749,7 @@
       startPing();
     }
     if (k === 'betaUI') {
+      applyBetaUI();
       if (S.betaUI) initTopBanner();
     }
   });
@@ -1089,19 +1091,25 @@ if __name__ == '__main__':
       if (!thumb) return;
       const btn = document.createElement('div');
       btn.className = 'ys-3dots';
-      btn.textContent = '⋮';
+      
+      const icon = document.createElement('i');
+      icon.className = 'ri-more-fill';
+      btn.appendChild(icon);
+      
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         const rect = btn.getBoundingClientRect();
         openContextMenu(rect.left, rect.bottom, card);
       });
+      
       if (getComputedStyle(thumb).position === 'static') thumb.style.position = 'relative';
       thumb.appendChild(btn);
     });
   }
 
-  window.__ysDotsInterval = setInterval(injectThreeDots, 1500);
+  window.__ysDotsObs = new MutationObserver(() => { injectThreeDots(); });
+  window.__ysDotsObs.observe(document.body, { childList: true, subtree: true });
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#ys-ctx-menu')) hideCtxMenu();
@@ -1114,14 +1122,78 @@ if __name__ == '__main__':
       banner.id = 'ys-top-banner';
       document.body.appendChild(banner);
     }
-    banner.innerHTML = '<i class="ri-notification-3-line" style="color:#4b7a63"></i> <span>Welcome to YouSource UI Beta! Enjoy the glassy look.</span>';
+    
+    while (banner.firstChild) banner.removeChild(banner.firstChild);
+    
+    const icon = document.createElement('i');
+    icon.className = 'ri-notification-3-line';
+    icon.style.color = '#4b7a63';
+    
+    const span = document.createElement('span');
+    span.textContent = 'Welcome to YouSource UI Beta! Enjoy the glassy look.';
+    
+    banner.appendChild(icon);
+    banner.appendChild(span);
     banner.classList.add('ys-show');
     setTimeout(() => banner.classList.remove('ys-show'), 5000);
   }
 
-  window.addEventListener('yt-navigate-finish', () => { hideSug(); hideCtxMenu(); setTimeout(() => { apply(); injectThreeDots(); }, 150); });
+  function applyBetaUI() {
+    if (S.betaUI) {
+      document.querySelectorAll('#guide-button yt-icon, #logo-icon, #search-icon-legacy yt-icon, #voice-search-button yt-icon, #create-icon yt-icon, #notification-button yt-icon').forEach(el => el.style.display = 'none');
+      
+      if (!document.querySelector('#ys-custom-home-icon')) {
+        const homeIcon = document.createElement('i');
+        homeIcon.id = 'ys-custom-home-icon';
+        homeIcon.className = 'ri-home-5-line';
+        homeIcon.style.cssText = 'font-size:24px;color:#fff;margin-right:24px;display:block;';
+        const target = document.querySelector('ytd-guide-entry-renderer a#endpoint');
+        if (target) target.prepend(homeIcon);
+      }
+      
+      if (!document.querySelector('#ys-custom-search-icon')) {
+        const searchIcon = document.createElement('i');
+        searchIcon.id = 'ys-custom-search-icon';
+        searchIcon.className = 'ri-search-line';
+        searchIcon.style.cssText = 'font-size:20px;color:#aaa;';
+        const target = document.querySelector('#search-icon-legacy');
+        if (target) target.prepend(searchIcon);
+      }
+    } else {
+      document.querySelectorAll('#guide-button yt-icon, #logo-icon, #search-icon-legacy yt-icon, #voice-search-button yt-icon, #create-icon yt-icon, #notification-button yt-icon').forEach(el => el.style.display = '');
+      const homeIcon = document.querySelector('#ys-custom-home-icon');
+      if (homeIcon) homeIcon.remove();
+      const searchIcon = document.querySelector('#ys-custom-search-icon');
+      if (searchIcon) searchIcon.remove();
+    }
+  }
 
-  syncPanel(); apply(); renderTools(); injectThreeDots();
+  function addAnimations() {
+    document.addEventListener('click', e => {
+      const subBtn = e.target.closest('ytd-subscribe-button-renderer');
+      if (subBtn) {
+        subBtn.style.transform = 'scale(0.9)';
+        setTimeout(() => subBtn.style.transform = 'scale(1)', 150);
+      }
+      const likeBtn = e.target.closest('#top-level-buttons-computed > ytd-toggle-button-renderer:first-child');
+      if (likeBtn) {
+        likeBtn.style.transform = 'scale(1.2)';
+        setTimeout(() => likeBtn.style.transform = 'scale(1)', 150);
+      }
+    });
+  }
+
+  window.addEventListener('yt-navigate-finish', () => { 
+    hideSug(); 
+    hideCtxMenu(); 
+    setTimeout(() => { 
+      apply(); 
+      injectThreeDots(); 
+      applyBetaUI(); 
+    }, 150); 
+  });
+
+  syncPanel(); apply(); renderTools(); injectThreeDots(); addAnimations();
   
   fetchAnimeLogo().then(url => {
     ANIME_LOGO = url;
@@ -1136,7 +1208,7 @@ if __name__ == '__main__':
   setTimeout(() => {
     loader.classList.add('ys-hide');
     setTimeout(() => { if (loader.parentNode) loader.remove(); }, 600);
-    toast('YouSource v6.4 Ready. 250+ tools loaded.', 'success', 3000);
+    toast('YouSource v6.6.1 Ready. 250+ tools loaded.', 'success', 3000);
     if (S.betaUI) initTopBanner();
   }, 1500);
 

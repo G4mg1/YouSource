@@ -11,7 +11,7 @@
 
   const SYMBOL_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M21.58 7.19c-.23-1.25-1.25-2.23-2.49-2.46C16.89 4.25 12 4.25 12 4.25s-4.89 0-7.09.48C3.67 4.96 2.65 5.94 2.42 7.19 2 9.42 2 12 2 12s0 2.58.42 4.81c.23 1.25 1.25 2.23 2.49 2.46 2.2.48 7.09.48 7.09.48s4.89 0 7.09-.48c1.24-.23 2.26-1.21 2.49-2.46.42-2.23.42-4.81.42-4.81s0-2.58-.42-4.81zM9.99 15.41V8.59l5.73 3.41-5.73 3.41z'/%3E%3C/svg%3E";
   let ANIME_LOGO = SYMBOL_LOGO;
-  let CURRENT_VERSION = '6.6.1';
+  let CURRENT_VERSION = '6.7.0';
 
   async function fetchAnimeLogo() {
     const apis = [
@@ -197,17 +197,17 @@
     region: '', strictRegion: false,
     suggest: true, minimal: true,
     serverBindEnabled: false, bridgeUrl: '',
-    autoUpdate: true, betaUI: false
+    autoUpdate: true
   };
   TOOLS.forEach(t => DEF[t.id] = false);
 
   let S;
-  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.6.1') || '{}')); }
+  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.7') || '{}')); }
   catch (e) { S = Object.assign({}, DEF); }
   
   if (!S.removedVideos) S.removedVideos = [];
 
-  const save = () => { try { localStorage.setItem('ys.v6.6.1', JSON.stringify(S)); } catch(e){} };
+  const save = () => { try { localStorage.setItem('ys.v6.7', JSON.stringify(S)); } catch(e){} };
 
   const BASE_CSS = `
   #ys-loader{position:fixed!important;inset:0!important;z-index:2147483647!important;background:#0a0a0c!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;transition:opacity .6s ease, visibility .6s!important}
@@ -330,50 +330,11 @@
     cursor:pointer!important;border-radius:6px!important;transition:background .15s!important;display:flex!important;align-items:center!important;gap:8px!important}
   .ys-ctx-item:hover{background:rgba(255,255,255,0.1)!important}
 
-  .ys-3dots { position: absolute !important; top: 8px !important; right: 8px !important; z-index: 1000 !important; background: rgba(0,0,0,0.7) !important; color: white !important; border-radius: 6px !important; padding: 2px 6px !important; cursor: pointer !important; opacity: 0 !important; transition: opacity 0.2s !important; font-size: 18px !important; line-height: 1.2 !important; display: flex !important; align-items: center !important; justify-content: center !important; user-select: none !important; font-weight: bold; pointer-events: auto !important; }
+  .ys-3dots { position: absolute !important; top: 8px !important; right: 8px !important; z-index: 1000 !important; background: rgba(0,0,0,0.7) !important; color: white !important; border-radius: 6px !important; padding: 4px 8px !important; cursor: pointer !important; opacity: 0 !important; transition: opacity 0.2s !important; font-size: 18px !important; line-height: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; user-select: none !important; font-weight: bold; pointer-events: auto !important; }
   ytd-rich-item-renderer:hover .ys-3dots, ytd-video-renderer:hover .ys-3dots, ytd-compact-video-renderer:hover .ys-3dots, ytd-reel-item-renderer:hover .ys-3dots { opacity: 1 !important; }
 
-  #ys-top-banner { position: fixed !important; top: 16px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 2147483647 !important; background: rgba(20,21,23,0.95) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 12px !important; padding: 8px 16px !important; color: white !important; font: 13px ui-sans-serif,system-ui !important; display: none !important; align-items: center !important; gap: 10px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.6) !important; backdrop-filter: blur(16px) !important; }
-  #ys-top-banner.ys-show { display: flex !important; }
-
-  html.ys-beta-ui {
-    --yt-spec-base-background: #0f0f0f !important;
-    --yt-spec-raised-background: #1a1a1a !important;
-    --yt-spec-menu-background: #1a1a1a !important;
-  }
-  html.ys-beta-ui #masthead-container {
-    background: rgba(15, 15, 15, 0.85) !important;
-    backdrop-filter: blur(12px) !important;
-    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-  }
-  html.ys-beta-ui #search-form {
-    border: 1px solid rgba(255,255,255,0.15) !important;
-    border-radius: 24px !important;
-    background: rgba(255,255,255,0.05) !important;
-    overflow: hidden !important;
-  }
-  html.ys-beta-ui #search-form input {
-    background: transparent !important;
-    color: #fff !important;
-  }
-  html.ys-beta-ui #search-icon-legacy {
-    background: transparent !important;
-    border-left: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 0 !important;
-  }
-  html.ys-beta-ui ytd-subscribe-button-renderer .yt-spec-button-shape-next {
-    background: linear-gradient(135deg, #4b7a63, #2c4a3a) !important;
-    border-radius: 20px !important;
-    transition: transform 0.2s, box-shadow 0.2s !important;
-    border: none !important;
-  }
-  html.ys-beta-ui ytd-subscribe-button-renderer .yt-spec-button-shape-next:active {
-    transform: scale(0.95) !important;
-    box-shadow: 0 0 15px rgba(75, 122, 99, 0.6) !important;
-  }
-  html.ys-beta-ui ytd-thumbnail img {
-    border-radius: 12px !important;
-  }
+  .ys-3dots-player { position: absolute !important; top: 16px !important; right: 16px !important; z-index: 9999 !important; background: rgba(0,0,0,0.6) !important; color: white !important; border-radius: 8px !important; width: 36px !important; height: 36px !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; font-size: 20px !important; transition: background 0.2s !important; pointer-events: auto !important; opacity: 0.8 !important; }
+  .ys-3dots-player:hover { background: rgba(0,0,0,0.9) !important; opacity: 1 !important; }
   `;
 
   try {
@@ -553,7 +514,7 @@
   const brand = document.createElement('div'); brand.className = 'ys-brand';
   const brandImg = document.createElement('img'); brandImg.src = ANIME_LOGO; brandImg.setAttribute('data-logo', '1');
   brand.appendChild(brandImg); brand.appendChild(document.createTextNode('YouSource'));
-  const ver = document.createElement('span'); ver.textContent = 'v6.6.1'; brand.appendChild(ver);
+  const ver = document.createElement('span'); ver.textContent = 'v6.7'; brand.appendChild(ver);
   const closeBtn = document.createElement('button'); closeBtn.type = 'button'; closeBtn.className = 'ys-x'; closeBtn.setAttribute('data-act', 'close'); closeBtn.textContent = '✕';
   header.appendChild(brand); header.appendChild(closeBtn); panel.appendChild(header);
 
@@ -570,7 +531,6 @@
   
   const tabCore = document.createElement('div'); tabCore.className = 'ys-content active'; tabCore.setAttribute('data-content', 'core');
   tabCore.appendChild(row('Enabled', makeSwitch('on')));
-  tabCore.appendChild(row('YouSource UI (Beta)', makeSwitch('betaUI')));
   tabCore.appendChild(sep());
   
   tabCore.appendChild(row('Logo Style', makeSelect('logoType', [
@@ -748,10 +708,6 @@
     if (k === 'serverBindEnabled') {
       startPing();
     }
-    if (k === 'betaUI') {
-      applyBetaUI();
-      if (S.betaUI) initTopBanner();
-    }
   });
 
   connectBtn.addEventListener('click', async () => {
@@ -892,7 +848,6 @@ if __name__ == '__main__':
 
   function apply() {
     document.documentElement.classList.toggle('ys-on', !!S.on);
-    document.documentElement.classList.toggle('ys-beta-ui', !!S.betaUI);
     
     if (!S.on) {
       document.querySelectorAll('[data-ys-hidden]').forEach(el => { el.style.display = ''; delete el.dataset.ysHidden; });
@@ -1106,6 +1061,29 @@ if __name__ == '__main__':
       if (getComputedStyle(thumb).position === 'static') thumb.style.position = 'relative';
       thumb.appendChild(btn);
     });
+
+    const playerContainer = document.querySelector('#movie_player') || document.querySelector('#shorts-player');
+    if (playerContainer && !playerContainer.querySelector('.ys-3dots-player')) {
+      const btn = document.createElement('div');
+      btn.className = 'ys-3dots-player';
+      
+      const icon = document.createElement('i');
+      icon.className = 'ri-more-fill';
+      btn.appendChild(icon);
+      
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = btn.getBoundingClientRect();
+        const fakeCard = document.createElement('div');
+        const a = document.createElement('a');
+        a.href = location.href;
+        fakeCard.appendChild(a);
+        openContextMenu(rect.left, rect.bottom, fakeCard);
+      });
+      
+      playerContainer.appendChild(btn);
+    }
   }
 
   window.__ysDotsObs = new MutationObserver(() => { injectThreeDots(); });
@@ -1114,59 +1092,6 @@ if __name__ == '__main__':
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#ys-ctx-menu')) hideCtxMenu();
   });
-
-  function initTopBanner() {
-    let banner = document.getElementById('ys-top-banner');
-    if (!banner) {
-      banner = document.createElement('div');
-      banner.id = 'ys-top-banner';
-      document.body.appendChild(banner);
-    }
-    
-    while (banner.firstChild) banner.removeChild(banner.firstChild);
-    
-    const icon = document.createElement('i');
-    icon.className = 'ri-notification-3-line';
-    icon.style.color = '#4b7a63';
-    
-    const span = document.createElement('span');
-    span.textContent = 'Welcome to YouSource UI Beta! Enjoy the glassy look.';
-    
-    banner.appendChild(icon);
-    banner.appendChild(span);
-    banner.classList.add('ys-show');
-    setTimeout(() => banner.classList.remove('ys-show'), 5000);
-  }
-
-  function applyBetaUI() {
-    if (S.betaUI) {
-      document.querySelectorAll('#guide-button yt-icon, #logo-icon, #search-icon-legacy yt-icon, #voice-search-button yt-icon, #create-icon yt-icon, #notification-button yt-icon').forEach(el => el.style.display = 'none');
-      
-      if (!document.querySelector('#ys-custom-home-icon')) {
-        const homeIcon = document.createElement('i');
-        homeIcon.id = 'ys-custom-home-icon';
-        homeIcon.className = 'ri-home-5-line';
-        homeIcon.style.cssText = 'font-size:24px;color:#fff;margin-right:24px;display:block;';
-        const target = document.querySelector('ytd-guide-entry-renderer a#endpoint');
-        if (target) target.prepend(homeIcon);
-      }
-      
-      if (!document.querySelector('#ys-custom-search-icon')) {
-        const searchIcon = document.createElement('i');
-        searchIcon.id = 'ys-custom-search-icon';
-        searchIcon.className = 'ri-search-line';
-        searchIcon.style.cssText = 'font-size:20px;color:#aaa;';
-        const target = document.querySelector('#search-icon-legacy');
-        if (target) target.prepend(searchIcon);
-      }
-    } else {
-      document.querySelectorAll('#guide-button yt-icon, #logo-icon, #search-icon-legacy yt-icon, #voice-search-button yt-icon, #create-icon yt-icon, #notification-button yt-icon').forEach(el => el.style.display = '');
-      const homeIcon = document.querySelector('#ys-custom-home-icon');
-      if (homeIcon) homeIcon.remove();
-      const searchIcon = document.querySelector('#ys-custom-search-icon');
-      if (searchIcon) searchIcon.remove();
-    }
-  }
 
   function addAnimations() {
     document.addEventListener('click', e => {
@@ -1189,7 +1114,6 @@ if __name__ == '__main__':
     setTimeout(() => { 
       apply(); 
       injectThreeDots(); 
-      applyBetaUI(); 
     }, 150); 
   });
 
@@ -1208,8 +1132,7 @@ if __name__ == '__main__':
   setTimeout(() => {
     loader.classList.add('ys-hide');
     setTimeout(() => { if (loader.parentNode) loader.remove(); }, 600);
-    toast('YouSource v6.6.1 Ready. 250+ tools loaded.', 'success', 3000);
-    if (S.betaUI) initTopBanner();
+    toast('YouSource v6.7 Ready. 250+ tools loaded.', 'success', 3000);
   }, 1500);
 
   if (S.serverBindEnabled) startPing();

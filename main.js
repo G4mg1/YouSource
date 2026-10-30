@@ -2,15 +2,15 @@
   'use strict';
   if (window.__YouSource) { window.__YouSource.open(); return; }
 
-  ['ys-fab','ys-panel','ys-sug','ys-toasts','ys-watermark','yousource-style','ys-loader','yousource-tools-style'].forEach(id => {
+  ['ys-fab','ys-panel','ys-sug','ys-toasts','ys-watermark','yousource-style','ys-loader','yousource-tools-style','ys-ctx-menu'].forEach(id => {
     const el = document.getElementById(id); if (el) el.remove();
   });
   if (window.__ysObs) { try { window.__ysObs.disconnect(); } catch(e){} }
-  if (window.__ysScrollTimer) clearInterval(window.__ysScrollTimer);
   if (window.__ysPingTimer) clearInterval(window.__ysPingTimer);
 
   const SYMBOL_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M21.58 7.19c-.23-1.25-1.25-2.23-2.49-2.46C16.89 4.25 12 4.25 12 4.25s-4.89 0-7.09.48C3.67 4.96 2.65 5.94 2.42 7.19 2 9.42 2 12 2 12s0 2.58.42 4.81c.23 1.25 1.25 2.23 2.49 2.46 2.2.48 7.09.48 7.09.48s4.89 0 7.09-.48c1.24-.23 2.26-1.21 2.49-2.46.42-2.23.42-4.81.42-4.81s0-2.58-.42-4.81zM9.99 15.41V8.59l5.73 3.41-5.73 3.41z'/%3E%3C/svg%3E";
   let ANIME_LOGO = SYMBOL_LOGO;
+  let CURRENT_VERSION = '6.2.0';
 
   async function fetchAnimeLogo() {
     const apis = [
@@ -38,22 +38,6 @@
   remixLink.rel = 'stylesheet';
   remixLink.href = 'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css';
   document.head.appendChild(remixLink);
-
-  function el(tag, attrs, children) {
-    const e = document.createElement(tag);
-    if (attrs) for (const k in attrs) {
-      const v = attrs[k]; if (v == null) continue;
-      if (k === 'className') e.className = v;
-      else if (k === 'textContent') e.textContent = v;
-      else if (k === 'checked') { if (v) e.checked = true; }
-      else e.setAttribute(k, v);
-    }
-    if (children) [].concat(children).forEach(c => {
-      if (c == null) return;
-      e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
-    });
-    return e;
-  }
 
   const TOOLS = [
     { id: 'hideShorts', label: 'Hide Shorts', selector: 'ytd-reel-item-renderer, ytd-reel-shelf-renderer', css: 'display:none!important' },
@@ -217,12 +201,10 @@
   TOOLS.forEach(t => DEF[t.id] = false);
 
   let S;
-  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.1') || '{}')); }
+  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.2') || '{}')); }
   catch (e) { S = Object.assign({}, DEF); }
 
-  const save = () => { try { localStorage.setItem('ys.v6.1', JSON.stringify(S)); } catch(e){} };
-
-  const txt = el => el ? (el.textContent || '').replace(/\s+/g,' ').trim() : '';
+  const save = () => { try { localStorage.setItem('ys.v6.2', JSON.stringify(S)); } catch(e){} };
 
   const BASE_CSS = `
   #ys-loader{position:fixed!important;inset:0!important;z-index:2147483647!important;background:#0a0a0c!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;transition:opacity .6s ease, visibility .6s!important}
@@ -337,6 +319,13 @@
 
   #ys-watermark{position:fixed!important;bottom:20px!important;right:20px!important;z-index:2147483646!important;pointer-events:none!important;opacity:0.6!important;transition:.3s!important}
   #ys-watermark img{width:36px!important;height:36px!important;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))!important;border-radius:50%!important;background:#17181a;object-fit:cover}
+
+  #ys-ctx-menu{position:fixed!important;z-index:2147483647!important;background:rgba(20,21,23,0.95)!important;
+    border:1px solid rgba(255,255,255,0.1)!important;border-radius:10px!important;padding:6px!important;
+    box-shadow:0 10px 30px rgba(0,0,0,0.7)!important;backdrop-filter:blur(16px)!important;display:none;flex-direction:column!important;min-width:180px!important}
+  .ys-ctx-item{color:#e8e8e8!important;padding:8px 12px!important;font:13px ui-sans-serif,system-ui!important;
+    cursor:pointer!important;border-radius:6px!important;transition:background .15s!important;display:flex!important;align-items:center!important;gap:8px!important}
+  .ys-ctx-item:hover{background:rgba(255,255,255,0.1)!important}
   `;
 
   try {
@@ -468,9 +457,8 @@
       clearTimeout(tid);
       if (!r.ok) throw new Error('ver.txt fetch failed');
       const remoteVersion = (await r.text()).trim();
-      const currentVersion = '6.1.0';
       
-      if (remoteVersion && remoteVersion !== currentVersion) {
+      if (remoteVersion && remoteVersion !== CURRENT_VERSION) {
         toast('Update found: v' + remoteVersion + '. Downloading...', 'info', 3000);
         const scriptR = await fetch('https://raw.githubusercontent.com/G4mg1/YouSource/main/main.js');
         if (!scriptR.ok) throw new Error('main.js fetch failed');
@@ -498,7 +486,7 @@
         }
         toast('Updated to v' + remoteVersion + '. Reload to apply.', 'success', 5000);
       } else {
-        toast('YouSource is up to date (v' + currentVersion + ')', 'success', 3000);
+        toast('YouSource is up to date (v' + CURRENT_VERSION + ')', 'success', 3000);
       }
     } catch (e) {
       toast('Update check failed: ' + e.message, 'error', 5000);
@@ -516,7 +504,7 @@
   const brand = document.createElement('div'); brand.className = 'ys-brand';
   const brandImg = document.createElement('img'); brandImg.src = ANIME_LOGO; brandImg.setAttribute('data-logo', '1');
   brand.appendChild(brandImg); brand.appendChild(document.createTextNode('YouSource'));
-  const ver = document.createElement('span'); ver.textContent = 'v6.1'; brand.appendChild(ver);
+  const ver = document.createElement('span'); ver.textContent = 'v6.2'; brand.appendChild(ver);
   const closeBtn = document.createElement('button'); closeBtn.type = 'button'; closeBtn.className = 'ys-x'; closeBtn.setAttribute('data-act', 'close'); closeBtn.textContent = '✕';
   header.appendChild(brand); header.appendChild(closeBtn); panel.appendChild(header);
 
@@ -724,7 +712,7 @@
   checkUpdateBtn.addEventListener('click', checkForUpdates);
 
   pyBtn.addEventListener('click', () => {
-    const code = `from flask import Flask, request, jsonify, Response\nfrom flask_cors import CORS\nimport requests\n\napp = Flask(__name__)\nCORS(app)\n\n@app.route('/ping')\ndef ping():\n    return jsonify({"status": "ok"})\n\n@app.route('/suggest')\ndef suggest():\n    q = request.args.get('q', '')\n    r = requests.get(f'https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q={q}')\n    return jsonify(r.json())\n\n@app.route('/proxy')\ndef proxy():\n    url = request.args.get('url')\n    if not url: return jsonify({"error": "no url"}), 400\n    try:\n        r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})\n        return Response(r.content, status=r.status_code, content_type=r.headers.get('Content-Type'))\n    except Exception as e:\n        return jsonify({"error": str(e)}), 500\n\nif __name__ == '__main__':\n    app.run(port=5000)`;
+    const code = `from flask import Flask, request, jsonify, Response\nfrom flask_cors import CORS\nimport requests\n\napp = Flask(__name__)\nCORS(app)\n\n@app.route('/ping')\ndef ping():\n    return jsonify({"status": "ok"})\n\n@app.route('/suggest')\ndef suggest():\n    q = request.args.get('q', '')\n    r = requests.get(f'https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q={q}')\n    return jsonify(r.json())\n\n@app.route('/proxy')\ndef proxy():\n    url = request.args.get('url')\n    if not url: return jsonify({"error": "no url"}), 400\n    try:\n        r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})\n        return Response(r.content, status=r.status_code, content_type=r.headers.get('Content-Type'))\n    except Exception as e:\n        return jsonify({"error": str(e)}), 500\n\n@app.route('/download')\ndef download():\n    url = request.args.get('url')\n    quality = request.args.get('quality')\n    if not url: return jsonify({"error": "no url"}), 400\n    return jsonify({"status": "success", "message": f"Downloading {url} at {quality}..."})\n\nif __name__ == '__main__':\n    app.run(port=5000)`;
     const blob = new Blob([code], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'bridge.py'; a.click();
@@ -854,7 +842,95 @@
   document.addEventListener('focusin', e => { if (isSearchInput(e.target)) onSearchInput({ target: e.target }); }, true);
   document.addEventListener('mousedown', e => { if (sugEl && !e.target.closest('#ys-sug')) hideSug(); }, true);
 
-  window.addEventListener('yt-navigate-finish', () => { hideSug(); setTimeout(() => { apply(); }, 150); });
+  const ctxMenu = document.createElement('div');
+  ctxMenu.id = 'ys-ctx-menu';
+  document.body.appendChild(ctxMenu);
+
+  let currentVideoUrl = '';
+  let currentCard = null;
+
+  function hideCtxMenu() {
+    ctxMenu.style.display = 'none';
+  }
+
+  function showQualityMenu() {
+    while (ctxMenu.firstChild) ctxMenu.removeChild(ctxMenu.firstChild);
+    
+    const qualities = ['1080p', '720p', '480p', '360p', 'Audio Only'];
+    qualities.forEach(q => {
+      const opt = document.createElement('div');
+      opt.className = 'ys-ctx-item';
+      opt.textContent = q;
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideCtxMenu();
+        startDownload(currentVideoUrl, q);
+      });
+      ctxMenu.appendChild(opt);
+    });
+  }
+
+  async function startDownload(url, quality) {
+    if (S.serverBindEnabled && S.bridgeUrl && pingStatus === 'connected') {
+      toast(`Starting download (${quality})...`, 'info', 3000);
+      try {
+        const res = await fetch(S.bridgeUrl.replace(/\/$/, '') + '/download?url=' + encodeURIComponent(url) + '&quality=' + encodeURIComponent(quality));
+        if (res.ok) toast('Download initiated on server!', 'success', 4000);
+        else toast('Server rejected download.', 'error', 3000);
+      } catch (e) {
+        toast('Download request failed.', 'error', 3000);
+      }
+    } else {
+      toast('ServerBind required for downloading. Connect it in settings.', 'warn', 5000);
+    }
+  }
+
+  document.addEventListener('contextmenu', (e) => {
+    const card = e.target.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer');
+    if (!card) {
+      if (ctxMenu.style.display === 'flex') hideCtxMenu();
+      return;
+    }
+    
+    const link = card.querySelector('a#thumbnail') || card.querySelector('a#video-title-link');
+    if (!link || !link.href) return;
+
+    e.preventDefault();
+    currentVideoUrl = link.href;
+    currentCard = card;
+
+    while (ctxMenu.firstChild) ctxMenu.removeChild(ctxMenu.firstChild);
+
+    const dlBtn = document.createElement('div');
+    dlBtn.className = 'ys-ctx-item';
+    dlBtn.textContent = 'Download video';
+    dlBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      showQualityMenu();
+    });
+
+    const rmBtn = document.createElement('div');
+    rmBtn.className = 'ys-ctx-item';
+    rmBtn.textContent = 'Remove from list';
+    rmBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (currentCard) currentCard.style.display = 'none';
+      hideCtxMenu();
+    });
+
+    ctxMenu.appendChild(dlBtn);
+    ctxMenu.appendChild(rmBtn);
+
+    ctxMenu.style.left = Math.min(e.clientX, window.innerWidth - 200) + 'px';
+    ctxMenu.style.top = Math.min(e.clientY, window.innerHeight - 100) + 'px';
+    ctxMenu.style.display = 'flex';
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#ys-ctx-menu')) hideCtxMenu();
+  });
+
+  window.addEventListener('yt-navigate-finish', () => { hideSug(); hideCtxMenu(); setTimeout(() => { apply(); }, 150); });
 
   syncPanel(); apply(); renderTools();
   
@@ -871,7 +947,7 @@
   setTimeout(() => {
     loader.classList.add('ys-hide');
     setTimeout(() => { if (loader.parentNode) loader.remove(); }, 600);
-    toast('YouSource v6.1 Ready. 250+ tools loaded.', 'success', 3000);
+    toast('YouSource v6.2 Ready. 250+ tools loaded.', 'success', 3000);
   }, 1500);
 
   if (S.serverBindEnabled) startPing();

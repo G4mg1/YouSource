@@ -149,7 +149,7 @@
     { id: 'hideYourVideosSidebar', label: 'Hide Your Videos Sidebar', selector: 'ytd-guide-entry-renderer[title="Your Videos"]', css: 'display:none!important' },
     { id: 'hideDownloadsSidebar', label: 'Hide Downloads Sidebar', selector: 'ytd-guide-entry-renderer[title="Downloads"]', css: 'display:none!important' },
     { id: 'hideClipsSidebar', label: 'Hide Clips Sidebar', selector: 'ytd-guide-entry-renderer[title="Clips"]', css: 'display:none!important' },
-    { id: 'hidePlaylistsSidebar', label: 'Hide Playlists Sidebar', selector: 'ytd-guide-entry-renderer[title="Playlists"]', css: 'display:none!important' },
+    { id: 'hidePlaylistsSidebar2', label: 'Hide Playlists Sidebar', selector: 'ytd-guide-entry-renderer[title="Playlists"]', css: 'display:none!important' },
     { id: 'hideMixesSidebar', label: 'Hide Mixes Sidebar', selector: 'ytd-guide-entry-renderer[title="Mixes"]', css: 'display:none!important' },
     { id: 'hideRadiosSidebar', label: 'Hide Radios Sidebar', selector: 'ytd-guide-entry-renderer[title="Radios"]', css: 'display:none!important' },
     { id: 'hideCommunitySidebar', label: 'Hide Community Sidebar', selector: 'ytd-guide-entry-renderer[title="Community"]', css: 'display:none!important' },
@@ -339,10 +339,16 @@
   #ys-watermark img{width:36px!important;height:36px!important;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))!important;border-radius:50%!important;background:#17181a;object-fit:cover}
   `;
 
-  const styleSheet = document.createElement('style');
-  styleSheet.id = 'yousource-style';
-  styleSheet.textContent = BASE_CSS;
-  document.head.appendChild(styleSheet);
+  try {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(BASE_CSS);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+  } catch (e) {
+    const styleSheet = document.createElement('style');
+    styleSheet.id = 'yousource-style';
+    styleSheet.textContent = BASE_CSS;
+    document.head.appendChild(styleSheet);
+  }
 
   const toolStyleSheet = document.createElement('style');
   toolStyleSheet.id = 'yousource-tools-style';
@@ -382,22 +388,6 @@
       const img = document.createElement('img'); img.src = S.logoType === 'anime' ? ANIME_LOGO : SYMBOL_LOGO;
       wm.appendChild(img); wm.style.display = 'block';
     } else { wm.style.display = 'none'; }
-  }
-
-  function toggleAutoScroll() {
-    if (window.__ysScrollTimer) clearInterval(window.__ysScrollTimer);
-    if (S.on && S['hide-shorts']) { }
-  }
-
-  function checkAutoLike() {
-    if (!S.on || !S['like-title'] || !location.pathname.startsWith('/watch')) return;
-    setTimeout(() => {
-      const likeBtn = document.querySelector('#top-level-buttons-computed > ytd-toggle-button-renderer:first-child button');
-      if (likeBtn && likeBtn.getAttribute('aria-pressed') === 'false') {
-        likeBtn.click();
-        toast('Auto-liked video', 'success', 2500);
-      }
-    }, 3500);
   }
 
   let pingStatus = 'disconnected';
@@ -485,7 +475,27 @@
         const scriptR = await fetch('https://raw.githubusercontent.com/G4mg1/YouSource/main/main.js');
         if (!scriptR.ok) throw new Error('main.js fetch failed');
         const scriptText = await scriptR.text();
-        eval(scriptText);
+        
+        let evaluated = false;
+        if (window.trustedTypes && window.trustedTypes.createPolicy) {
+          try {
+            const policy = window.trustedTypes.createPolicy('ys-update', { createScript: (s) => s });
+            eval(policy.createScript(scriptText));
+            evaluated = true;
+          } catch (e) { console.warn("Trusted Types policy failed", e); }
+        }
+        if (!evaluated) {
+          try {
+            const blob = new Blob([scriptText], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            await import(url);
+            URL.revokeObjectURL(url);
+            evaluated = true;
+          } catch (e) { console.warn("Blob import failed", e); }
+        }
+        if (!evaluated) {
+          try { eval(scriptText); evaluated = true; } catch(e) { alert('CSP blocked update. Please reload manually.'); }
+        }
         toast('Updated to v' + remoteVersion + '. Reload to apply.', 'success', 5000);
       } else {
         toast('YouSource is up to date (v' + currentVersion + ')', 'success', 3000);
@@ -844,7 +854,7 @@
   document.addEventListener('focusin', e => { if (isSearchInput(e.target)) onSearchInput({ target: e.target }); }, true);
   document.addEventListener('mousedown', e => { if (sugEl && !e.target.closest('#ys-sug')) hideSug(); }, true);
 
-  window.addEventListener('yt-navigate-finish', () => { hideSug(); setTimeout(() => { apply(); checkAutoLike(); }, 150); });
+  window.addEventListener('yt-navigate-finish', () => { hideSug(); setTimeout(() => { apply(); }, 150); });
 
   syncPanel(); apply(); renderTools();
   
@@ -865,10 +875,7 @@
   }, 1500);
 
   if (S.serverBindEnabled) startPing();
-
-  if (S.autoUpdate) {
-    setTimeout(checkForUpdates, 4000);
-  }
+  if (S.autoUpdate) setTimeout(checkForUpdates, 4000);
 
   window.__YouSource = {
     open: () => { panel.style.display = 'flex'; syncPanel(); },
@@ -880,5 +887,4 @@
     set(p) { Object.assign(S, p); save(); syncPanel(); apply(); }
   };
 
-  console.log('%cYouSource v6.1 loaded (250+ Tools)', 'background:#4b7a63;color:#fff;padding:2px 6px;border-radius:6px;font-weight:600');
 })();

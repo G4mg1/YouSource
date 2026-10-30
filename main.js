@@ -1,3 +1,4 @@
+// be careful use vpn youtube may flag your IP in the future we will add some security patcher !
 (function () {
   'use strict';
   if (window.__YouSource) { window.__YouSource.open(); return; }
@@ -7,10 +8,11 @@
   });
   if (window.__ysObs) { try { window.__ysObs.disconnect(); } catch(e){} }
   if (window.__ysPingTimer) clearInterval(window.__ysPingTimer);
+  if (window.__ysDotsInterval) clearInterval(window.__ysDotsInterval);
 
   const SYMBOL_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M21.58 7.19c-.23-1.25-1.25-2.23-2.49-2.46C16.89 4.25 12 4.25 12 4.25s-4.89 0-7.09.48C3.67 4.96 2.65 5.94 2.42 7.19 2 9.42 2 12 2 12s0 2.58.42 4.81c.23 1.25 1.25 2.23 2.49 2.46 2.2.48 7.09.48 7.09.48s4.89 0 7.09-.48c1.24-.23 2.26-1.21 2.49-2.46.42-2.23.42-4.81.42-4.81s0-2.58-.42-4.81zM9.99 15.41V8.59l5.73 3.41-5.73 3.41z'/%3E%3C/svg%3E";
   let ANIME_LOGO = SYMBOL_LOGO;
-  let CURRENT_VERSION = '6.2.0';
+  let CURRENT_VERSION = '6.3.0';
 
   async function fetchAnimeLogo() {
     const apis = [
@@ -192,7 +194,7 @@
   ];
 
   const DEF = {
-    on: true, theme: 'default', logoType: 'anime',
+    on: true, logoType: 'anime',
     region: '', strictRegion: false,
     suggest: true, minimal: true,
     serverBindEnabled: false, bridgeUrl: '',
@@ -201,10 +203,10 @@
   TOOLS.forEach(t => DEF[t.id] = false);
 
   let S;
-  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.2') || '{}')); }
+  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem('ys.v6.3') || '{}')); }
   catch (e) { S = Object.assign({}, DEF); }
 
-  const save = () => { try { localStorage.setItem('ys.v6.2', JSON.stringify(S)); } catch(e){} };
+  const save = () => { try { localStorage.setItem('ys.v6.3', JSON.stringify(S)); } catch(e){} };
 
   const BASE_CSS = `
   #ys-loader{position:fixed!important;inset:0!important;z-index:2147483647!important;background:#0a0a0c!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;transition:opacity .6s ease, visibility .6s!important}
@@ -326,6 +328,9 @@
   .ys-ctx-item{color:#e8e8e8!important;padding:8px 12px!important;font:13px ui-sans-serif,system-ui!important;
     cursor:pointer!important;border-radius:6px!important;transition:background .15s!important;display:flex!important;align-items:center!important;gap:8px!important}
   .ys-ctx-item:hover{background:rgba(255,255,255,0.1)!important}
+
+  .ys-3dots { position: absolute !important; top: 8px !important; right: 8px !important; z-index: 1000 !important; background: rgba(0,0,0,0.7) !important; color: white !important; border-radius: 4px !important; padding: 4px 8px !important; cursor: pointer !important; opacity: 0 !important; transition: opacity 0.2s !important; font-size: 18px !important; line-height: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; user-select: none !important; }
+  ytd-rich-item-renderer:hover .ys-3dots, ytd-video-renderer:hover .ys-3dots, ytd-compact-video-renderer:hover .ys-3dots { opacity: 1 !important; }
   `;
 
   try {
@@ -504,7 +509,7 @@
   const brand = document.createElement('div'); brand.className = 'ys-brand';
   const brandImg = document.createElement('img'); brandImg.src = ANIME_LOGO; brandImg.setAttribute('data-logo', '1');
   brand.appendChild(brandImg); brand.appendChild(document.createTextNode('YouSource'));
-  const ver = document.createElement('span'); ver.textContent = 'v6.2'; brand.appendChild(ver);
+  const ver = document.createElement('span'); ver.textContent = 'v6.3'; brand.appendChild(ver);
   const closeBtn = document.createElement('button'); closeBtn.type = 'button'; closeBtn.className = 'ys-x'; closeBtn.setAttribute('data-act', 'close'); closeBtn.textContent = '✕';
   header.appendChild(brand); header.appendChild(closeBtn); panel.appendChild(header);
 
@@ -522,10 +527,6 @@
   const tabCore = document.createElement('div'); tabCore.className = 'ys-content active'; tabCore.setAttribute('data-content', 'core');
   tabCore.appendChild(row('Enabled', makeSwitch('on')));
   tabCore.appendChild(sep());
-  
-  tabCore.appendChild(row('Theme', makeSelect('theme', [
-    { value: 'default', label: 'YouTube Default' }, { value: 'tiktok', label: 'TikTok' }, { value: 'insta', label: 'Instagram' }
-  ])));
   
   tabCore.appendChild(row('Logo Style', makeSelect('logoType', [
     { value: 'anime', label: 'Anime (Random Waifu)' }, { value: 'symbol', label: 'YouTube Symbol' }
@@ -767,8 +768,6 @@
       updateStat(); updateWatermark(); updateToolCSS(); return;
     }
     
-    document.documentElement.classList.remove('ys-theme-tiktok', 'ys-theme-insta', 'ys-theme-facebook');
-    if (S.theme !== 'default') document.documentElement.classList.add('ys-theme-' + S.theme);
     document.documentElement.classList.toggle('ys-minimal', !!S.minimal);
     
     updateStat();
@@ -885,17 +884,10 @@
     }
   }
 
-  document.addEventListener('contextmenu', (e) => {
-    const card = e.target.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer');
-    if (!card) {
-      if (ctxMenu.style.display === 'flex') hideCtxMenu();
-      return;
-    }
-    
-    const link = card.querySelector('a#thumbnail') || card.querySelector('a#video-title-link');
+  function openContextMenu(x, y, card) {
+    const link = card.querySelector('a#thumbnail') || card.querySelector('a#video-title-link') || card.querySelector('a');
     if (!link || !link.href) return;
 
-    e.preventDefault();
     currentVideoUrl = link.href;
     currentCard = card;
 
@@ -921,18 +913,49 @@
     ctxMenu.appendChild(dlBtn);
     ctxMenu.appendChild(rmBtn);
 
-    ctxMenu.style.left = Math.min(e.clientX, window.innerWidth - 200) + 'px';
-    ctxMenu.style.top = Math.min(e.clientY, window.innerHeight - 100) + 'px';
+    ctxMenu.style.left = Math.min(x, window.innerWidth - 200) + 'px';
+    ctxMenu.style.top = Math.min(y, window.innerHeight - 100) + 'px';
     ctxMenu.style.display = 'flex';
+  }
+
+  document.addEventListener('contextmenu', (e) => {
+    const card = e.target.closest('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-reel-item-renderer');
+    if (!card) {
+      if (ctxMenu.style.display === 'flex') hideCtxMenu();
+      return;
+    }
+    e.preventDefault();
+    openContextMenu(e.clientX, e.clientY, card);
   });
+
+  function injectThreeDots() {
+    document.querySelectorAll('ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer').forEach(card => {
+      if (card.querySelector('.ys-3dots')) return;
+      const thumb = card.querySelector('ytd-thumbnail') || card;
+      if (!thumb) return;
+      const btn = document.createElement('div');
+      btn.className = 'ys-3dots';
+      btn.textContent = '⋮';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const rect = btn.getBoundingClientRect();
+        openContextMenu(rect.left, rect.bottom, card);
+      });
+      if (getComputedStyle(thumb).position === 'static') thumb.style.position = 'relative';
+      thumb.appendChild(btn);
+    });
+  }
+
+  window.__ysDotsInterval = setInterval(injectThreeDots, 1500);
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#ys-ctx-menu')) hideCtxMenu();
   });
 
-  window.addEventListener('yt-navigate-finish', () => { hideSug(); hideCtxMenu(); setTimeout(() => { apply(); }, 150); });
+  window.addEventListener('yt-navigate-finish', () => { hideSug(); hideCtxMenu(); setTimeout(() => { apply(); injectThreeDots(); }, 150); });
 
-  syncPanel(); apply(); renderTools();
+  syncPanel(); apply(); renderTools(); injectThreeDots();
   
   fetchAnimeLogo().then(url => {
     ANIME_LOGO = url;
@@ -947,7 +970,7 @@
   setTimeout(() => {
     loader.classList.add('ys-hide');
     setTimeout(() => { if (loader.parentNode) loader.remove(); }, 600);
-    toast('YouSource v6.2 Ready. 250+ tools loaded.', 'success', 3000);
+    toast('YouSource v6.3 Ready. 250+ tools loaded.', 'success', 3000);
   }, 1500);
 
   if (S.serverBindEnabled) startPing();
